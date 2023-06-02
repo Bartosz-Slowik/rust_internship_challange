@@ -1,0 +1,10 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: diesel migration run
+
+vscode:
+  extensions:
+    - rust-lang.rust
+

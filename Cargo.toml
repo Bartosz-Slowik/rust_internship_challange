@@ -1,0 +1,21 @@
+[package]
+name = "luminovo-rust-challenge"
+version = "0.1.0"
+authors = ["MaksymPetyak <petyak.mi@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+random-number = "0.1.6"
+colored = "2"
+actix-web = "3"
+actix-rt = "2.2.0"
+r2d2 = "0.8"
+derive_more = "0.99.13"
+diesel = { version = "1.4.4", features = ["postgres", "uuidv07", "r2d2"] }
+dotenv = "0.15.0"
+uuid = {version = "0.8", features= ["serde", "v4"] }
+env_logger = "0.8"
+log = "0.4"
+serde = "1.0.125"
