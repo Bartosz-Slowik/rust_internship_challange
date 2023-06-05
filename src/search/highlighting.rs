@@ -1,8 +1,7 @@
 use core::panic;
 use serde::Serialize;
 
-#[derive(Serialize)]
-#[derive(Debug, PartialEq)]
+#[derive(Serialize, Debug, PartialEq)]
 pub enum Fragment {
     Highlighted(char),
     Normal(char),

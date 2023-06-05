@@ -1,4 +1,3 @@
-use crate::db::users::User;
 use crate::schema::search_requests;
 use diesel::prelude::*;
 use diesel::PgConnection;
@@ -18,7 +17,6 @@ pub struct SearchRequest {
 //I assmed i don't need to return structs with actual data structure
 
 impl SearchRequest {
-
     pub fn store_search_request(
         conn: &PgConnection,
         new_request: SearchRequest,
@@ -59,5 +57,4 @@ fn test_store_search_request() {
     };
     let result = SearchRequest::store_search_request(&conn, new_request);
     assert!(result.is_ok());
-
 }

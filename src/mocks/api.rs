@@ -15,7 +15,6 @@ impl Part {
         &self.mpn
     }
 }
-    
 
 impl PartSearchAPI {
     pub fn search(&self, search_query: &str, _api_key: &str) -> Vec<Part> {
