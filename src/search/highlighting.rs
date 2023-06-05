@@ -1,4 +1,3 @@
-use core::panic;
 use serde::Serialize;
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -34,8 +33,9 @@ pub fn highlight_search_query_in_mpn(search_query: &str, mpn: &str) -> Vec<Fragm
                             continue;
                         }
                         _ => {
-                            panic!("Wrong characters in verified search query");
+                            unreachable!("Wrong characters in verified search query");
                         }
+                        
                     }
                 }
             }

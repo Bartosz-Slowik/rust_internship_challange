@@ -6,45 +6,46 @@ use crate::mocks::api::PartSearchAPI;
 use crate::search::highlighting::highlight_search_query_in_mpn;
 use crate::ActingUserId;
 use actix_web::{web, HttpResponse};
+use serde::Deserialize;
 
+#[derive(Deserialize)]
+pub struct QueryData {
+    query: String,
+}
 // I assumed i wont be caching searches that failed
 pub async fn search_by_mpn(
     db_pool: web::Data<DbPool>,
     part_api: web::Data<PartSearchAPI>,
     user_id: web::Data<ActingUserId>,
-    search_query: web::Query<String>,
+    query: web::Query<QueryData>,
 ) -> Result<HttpResponse, ApiError> {
-    if search_query.is_empty() {
-        return Ok(HttpResponse::BadRequest().finish());
-    }
+    let query = query.into_inner().query;
 
     let conn = db_pool.get()?;
     let api_key = User::find(&conn, user_id.0)?.get_api_key().to_owned();
     let response;
 
-    if let Some(_result) =
-        SearchRequest::check_cached_result(&conn, api_key.clone(), &search_query)?
-    {
+    if let Some(_result) = SearchRequest::check_cached_result(&conn, api_key.clone(), &query)? {
         response = vec![];
     } else {
-        response = part_api.search(search_query.as_str(), api_key.as_str());
+        response = part_api.search(query.as_str(), api_key.as_str());
         if response.is_empty() {
-            return Ok(HttpResponse::NotFound().finish());
-        } else {
-            let new_request = SearchRequest {
-                id: uuid::Uuid::new_v4(),
-                api_key,
-                search_string: search_query.to_owned(),
-                successful: true,
-            };
-            SearchRequest::store_search_request(&conn, new_request)?;
-        }
+            return Ok(HttpResponse::NoContent().finish());
+        } 
+        let new_request = SearchRequest {
+            id: uuid::Uuid::new_v4(),
+            api_key,
+            search_string: query.to_owned(),
+            successful: true,
+        };
+        SearchRequest::store_search_request(&conn, new_request)?;
+        
     }
     let mut highlighted = Vec::new();
     for line in &response {
         highlighted.push(highlight_search_query_in_mpn(
             line.get_mpn(),
-            search_query.as_str(),
+            query.as_str(),
         ));
     }
 
@@ -74,10 +75,9 @@ mod tests {
                     .wrap(Logger::default())
                     .data(testing_pool.clone())
                     .data(ActingUserId(mock_user.id))
-                    .data(mocks::api::PartSearchAPI {})       
+                    .data(mocks::api::PartSearchAPI {})
                     .service(web::resource("/search").route(web::get().to(search_by_mpn))),
             )
-
             .await;
 
             let req = test::TestRequest::get()

@@ -21,7 +21,7 @@ impl PartSearchAPI {
         let n: u8 = random!(..=10);
         let mut parts = Vec::new();
         for _ in 0..n {
-            parts.push(generate_random_part_starting_with(&search_query))
+            parts.push(generate_random_part_starting_with(search_query))
         }
 
         info!(
