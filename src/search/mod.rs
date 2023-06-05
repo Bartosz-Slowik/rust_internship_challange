@@ -1,1 +1,1 @@
-mod highlighting;
+pub mod highlighting;

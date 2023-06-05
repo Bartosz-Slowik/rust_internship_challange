@@ -19,10 +19,13 @@ impl User {
     pub fn find_by_email(conn: &PgConnection, email: &str) -> Result<Self, diesel::result::Error> {
         users::table.filter(users::email.eq(email)).first(conn)
     }
+    pub fn get_api_key(&self) -> &str {
+        &self.api_key
+    }
 }
 
-#[table_name = "users"]
 #[derive(Debug, Insertable)]
+#[table_name = "users"]
 pub struct NewUser {
     pub email: String,
     pub api_key: String,

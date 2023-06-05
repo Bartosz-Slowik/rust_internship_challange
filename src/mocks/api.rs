@@ -10,6 +10,12 @@ pub struct PartSearchAPI {}
 pub struct Part {
     mpn: String,
 }
+impl Part {
+    pub fn get_mpn(&self) -> &str {
+        &self.mpn
+    }
+}
+    
 
 impl PartSearchAPI {
     pub fn search(&self, search_query: &str, _api_key: &str) -> Vec<Part> {

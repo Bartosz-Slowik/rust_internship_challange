@@ -1,20 +1,51 @@
-use crate::db_connection::DbPool;
+use crate::{db_connection::DbPool, mocks::api};
 use crate::errors::ApiError;
 use crate::mocks::api::PartSearchAPI;
 use crate::ActingUserId;
+use crate::db::requests::SearchRequest;
+use crate::db::users::User;
+use crate::search::highlighting::highlight_search_query_in_mpn;
 use actix_web::{web, HttpResponse};
 
 pub async fn search_by_mpn(
-    // Pool from which you can get connection
-    _db_pool: web::Data<DbPool>,
-    // Part api you can use for mocking response
-    _part_api: web::Data<PartSearchAPI>,
-    // Id of the user sending the request, you can use it to implement request caching here
-    _user_id: web::Data<ActingUserId>,
-    // TODO: You will need add search query parameter and return JSON response with parts with
-    // highlighted MPNs
+    db_pool: web::Data<DbPool>,
+    part_api: web::Data<PartSearchAPI>,
+    user_id: web::Data<ActingUserId>,
+    search_query: web::Query<String>,
 ) -> Result<HttpResponse, ApiError> {
-    Ok(HttpResponse::Ok().body("This doesn't seem right."))
+    if search_query.is_empty() {
+        return Ok(HttpResponse::BadRequest().finish());
+    }
+
+    let conn = db_pool.get()?;
+    let api_key = User::find(&conn, user_id.0)?.get_api_key().to_owned();
+    let response;
+
+    if let Some(_result) = SearchRequest::check_cached_result(&conn,api_key.clone() , &search_query)? {
+        response = vec![];
+    }
+    else {
+        response = part_api.search(search_query.as_str(), api_key.as_str());
+        if response.is_empty() {
+            return Ok(HttpResponse::NotFound().finish());
+        }
+        else{
+            let new_request = SearchRequest {
+                id: uuid::Uuid::new_v4(),
+                api_key,
+                search_string: search_query.to_owned(),
+                successful: true,
+            };
+            SearchRequest::store_search_request(&conn, new_request)?;
+        }
+    }
+    let mut highlighted = Vec::new();
+    for line in &response {
+        highlighted.push(highlight_search_query_in_mpn(line.get_mpn(), search_query.as_str()));
+    }
+    
+
+    Ok(HttpResponse::Ok().json(highlighted))
 }
 
 #[cfg(test)]
